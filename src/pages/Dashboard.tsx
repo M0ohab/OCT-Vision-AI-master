@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
-import { Calendar, Download, Eye, FileText, TrendingUp, Clock, AlertCircle, Save, Trash, X } from 'lucide-react';
+import { Calendar, Download, Eye, TrendingUp, Clock, AlertCircle, Save, Trash, X } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -519,10 +519,10 @@ const Dashboard = () => {
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="p-2 rounded-full text-blue-600 hover:text-blue-800 hover:bg-blue-100 transition"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
                 title="Edit Medical History"
               >
-                <FileText className="h-6 w-6" />
+                Edit
               </button>
             )}
           </div>

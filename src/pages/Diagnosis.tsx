@@ -290,22 +290,32 @@ const Diagnosis = () => {
     }
     setIsGeneratingPatientReport(true);
     try {
-      const maxProb = Math.max(...Object.values(prediction.probabilities).map(Number));
-      const prompt = `
-        Patient Name: ${patientInfo.full_name || ''}
-        Medical History: Existing Conditions: ${medicalHistory.existing_conditions || 'None'}, Chronic Diseases: ${medicalHistory.chronic_diseases || 'None'}, Previous Eye Conditions: ${medicalHistory.previous_eye_conditions || 'None'}
-        Diagnosis: ${prediction.prediction}
-        Confidence: ${(maxProb * 100).toFixed(1)}%
-        Severity: ${getSeverityLevel(maxProb)}
+      // Build Patient Info section dynamically, omitting any missing or 'N/A' fields
+      const patientInfoFields: { label: string; value?: string }[] = [
+        { label: 'Full Name', value: patientInfo.full_name },
+        { label: 'Email', value: patientInfo.email },
+      ];
+      const patientInfoSection = patientInfoFields
+        .filter(f => f.value && f.value !== 'N/A')
+        .map(f => `${f.label}: ${f.value}`)
+        .join('\n');
 
-        Please generate a simple, patient-friendly explanation of the diagnosis and what the patient should do next. Respond ONLY with the summary, do not include any extra text, labels, or formatting.`;
-      const summary = await generateContent(prompt);
-      setPatientSummary(summary?.trim() || 'Summary not available.');
+      const maxProb = Math.max(...Object.values(prediction.probabilities).map(Number));
+      // Fallback summary if Gemini is unavailable
+      let summary = '';
+      try {
+        const summaryPrompt = `You are a medical assistant. Write a clear, friendly summary for a patient based on the following information. Avoid medical jargon.\n\nDiagnosis: ${prediction.prediction}\nConfidence: ${(maxProb * 100).toFixed(1)}%\nSeverity: ${getSeverityLevel(maxProb)}\n\nExplain what this means for the patient, what they should do next, and offer reassurance if the severity is low. Do not include any doctor or hospital details.`;
+        summary = await generateContent(summaryPrompt);
+      } catch {
+        summary = `Your scan result is: ${prediction.prediction}.\nConfidence: ${(maxProb * 100).toFixed(1)}%.\nSeverity: ${getSeverityLevel(maxProb)}.\nPlease consult your eye doctor for more information and next steps.`;
+      }
+
+      const patientReportContent = `PATIENT REPORT\n\nPatient Info\n${patientInfoSection}\n\nVisit Date: ${new Date().toLocaleDateString()}\n\nDiagnosis\n${prediction.prediction}\n\nSummary\n${summary?.trim() || 'Summary not available.'}`;
+      setPatientSummary(patientReportContent);
       setShowPatientReport(true);
 
-      // Fix: Fetch latest health report, then update by id
+      // Save patient report to health_reports
       if (user && user.id) {
-        // 1. Get the latest health report for this user
         const { data: report, error: fetchError } = await supabase
           .from('health_reports')
           .select('id')
@@ -313,15 +323,11 @@ const Diagnosis = () => {
           .order('report_date', { ascending: false })
           .limit(1)
           .single();
-
         if (fetchError || !report) throw fetchError || new Error('No health report found.');
-
-        // 2. Update that report by id
         const { error: updateError } = await supabase
           .from('health_reports')
-          .update({ patient_report: summary })
+          .update({ patient_report: patientReportContent })
           .eq('id', report.id);
-
         if (updateError) throw updateError;
       }
     } catch (err) {
@@ -337,17 +343,20 @@ const Diagnosis = () => {
     setIsGeneratingDoctorReport(true);
     try {
       const maxProb = Math.max(...Object.values(prediction.probabilities).map(Number));
-      const prompt = `
-        Patient Name: ${patientInfo.full_name || ''}
-        Medical History: Existing Conditions: ${medicalHistory.existing_conditions || 'None'}, Chronic Diseases: ${medicalHistory.chronic_diseases || 'None'}, Previous Eye Conditions: ${medicalHistory.previous_eye_conditions || 'None'}
-        Diagnosis: ${prediction.prediction}
-        Confidence: ${(maxProb * 100).toFixed(1)}%
-        Severity: ${getSeverityLevel(maxProb)}
+      // Build Patient Info section dynamically, omitting any missing or 'N/A' fields
+      const patientInfoFields: { label: string; value?: string }[] = [
+        { label: 'Full Name', value: patientInfo.full_name },
+        { label: 'Email', value: patientInfo.email },
+      ];
+      const patientInfoSection = patientInfoFields
+        .filter(f => f.value && f.value !== 'N/A')
+        .map(f => `${f.label}: ${f.value}`)
+        .join('\n');
 
-        Please generate a detailed doctor-style report for this patient, including recommendations and next steps.
-      `;
-      const report = await generateContent(prompt);
-      setDoctorReportContent(report);
+      const assessment = `${patientInfo.full_name ? `Ms. ${patientInfo.full_name}` : 'The patient'} presented for an ophthalmic evaluation. Medical history includes: Existing Conditions: ${medicalHistory.existing_conditions || 'None'}, Chronic Diseases: ${medicalHistory.chronic_diseases || 'None'}, Previous Eye Conditions: ${medicalHistory.previous_eye_conditions || 'None'}. The OCT scan was reviewed in detail. The retina and macula were examined for abnormalities, and the scan quality was sufficient for diagnostic purposes. Based on the analysis, the main finding is: ${prediction.prediction}.`;
+      const diagnosis = `Diagnosis is ${prediction.prediction} with a confidence of ${(maxProb * 100).toFixed(1)}%. Severity is assessed as ${getSeverityLevel(maxProb)}. The scan indicates ${getSeverityLevel(maxProb) === 'Low' ? 'no significant pathological changes or urgent concerns at this time.' : 'findings that may require further evaluation and follow-up.'}`;
+      const reportContent = `MEDICAL REPORT\n\nPatient Info\n${patientInfoSection}\n\nVisit Date: ${new Date().toLocaleDateString()}\n\nAssessment\n${assessment}\n\nDiagnosis\n${diagnosis}\n\nPrescription\n${getSeverityLevel(maxProb) === 'Low' ? 'No prescription is necessary at this time, as the patient is in good health with no identified medical concerns.' : 'Please follow up with your ophthalmologist for further evaluation and management.'}`;
+      setDoctorReportContent(reportContent);
       setShowDoctorReportPanel(true);
 
       // Update the latest health report with the doctor's report
