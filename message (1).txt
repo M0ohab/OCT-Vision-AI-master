@@ -1,0 +1,104 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Brain, Shield, Users, Activity } from 'lucide-react';
+
+export default function Home() {
+  return (
+    <div className="container mx-auto px-4 py-12">
+      {/* Hero Section */}
+      <div className="text-center mb-16">
+        <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          Advanced OCT Scan Analysis with AI
+        </h1>
+        <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          Detect retinal diseases early with our state-of-the-art deep learning system.
+          Get instant, accurate diagnoses for DME, CNV, and Drusen.
+        </p>
+        <Link
+          to="/signup"
+          className="bg-blue-600 text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-blue-700 transition-colors"
+        >
+          Get Started
+        </Link>
+      </div>
+
+      {/* Features */}
+      <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <Brain className="h-12 w-12 text-blue-600 mb-4" />
+          <h3 className="text-xl font-semibold mb-2">AI-Powered Analysis</h3>
+          <p className="text-gray-600">
+            Advanced deep learning algorithms provide accurate disease detection and classification.
+          </p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <Shield className="h-12 w-12 text-blue-600 mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Secure & Private</h3>
+          <p className="text-gray-600">
+            Your medical data is protected with enterprise-grade security and encryption.
+          </p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <Activity className="h-12 w-12 text-blue-600 mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Instant Results</h3>
+          <p className="text-gray-600">
+            Get detailed reports for both doctors and patients within seconds.
+          </p>
+        </div>
+      </div>
+
+      {/* Team Section */}
+      <div className="text-center mb-16">
+        <h2 className="text-3xl font-bold text-gray-900 mb-8">Development Team</h2>
+        <div className="grid md:grid-cols-5 gap-8">
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <img
+              src="https://i.postimg.cc/PJV8V3GB/Whats-App-Image-2025-04-13-at-21-25-30-41fdf19b-removebg-preview.png"
+              alt="Dr. Jane Smith"
+              className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+            />
+            <h3 className="text-lg font-semibold">Ahmed Mohamed</h3>
+            {/* <p className="text-gray-600">Data Scientist</p> */}
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <img
+              src="https://i.postimg.cc/VLb6cLXS/Whats-App-Image-2025-04-13-at-21-25-14-b732a9af-Picsart-Ai-Image-Enhancer-removebg-preview.png"
+              alt="Dr. Emily Davis"
+              className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+            />
+            <h3 className="text-lg font-semibold">Ahmed Hossam</h3>
+            {/* <p className="text-gray-600">Machine Learning Engineer</p> */}
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <img
+              src="https://i.postimg.cc/BQwxm64X/Whats-App-Image-2025-01-22-at-21-46-04-b1174f1f-1-removebg-preview.png"
+              alt="Dr. John Doe"
+              className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+            />
+            <h3 className="text-lg font-semibold">Raghdan Ramadan</h3>
+            {/* <p className="text-gray-600">AI Specialist</p> */}
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <img
+              src="https://i.postimg.cc/vH9VtvqS/Whats-App-Image-2025-04-13-at-21-50-19-b2d3799b-Picsart-Ai-Image-Enhancer-removebg-preview.png"
+              alt="Dr. Michael Brown"
+              className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+            />
+            <h3 className="text-lg font-semibold">Abdullah Raafat</h3>
+            {/* <p className="text-gray-600">Software Developer</p> */}
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <img
+              src="https://i.postimg.cc/762HrKTF/Whats-App-Image-2025-04-13-at-21-38-30-02070495-Picsart-Ai-Image-Enhancer-removebg-preview.png"
+              alt="Dr. Sarah Wilson"
+              className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+            />
+            <h3 className="text-lg font-semibold">Mohab Marzouk</h3>
+            {/* <p className="text-gray-600">Project Manager</p> */}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
