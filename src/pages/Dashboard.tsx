@@ -535,7 +535,18 @@ const Dashboard = () => {
             backgroundColor: colors[index % colors.length],
             tension: 0.1,
             pointRadius: 5,
-            pointHoverRadius: 7
+            pointHoverRadius: 7,
+            // Add tooltip configuration for better data visualization
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const prediction = predictions
+                    .filter(p => p.disease_type === diseaseType)[context.dataIndex];
+                  const healthScore = (1 - prediction.confidence_score) * 100;
+                  return `Health Score: ${healthScore.toFixed(1)}% | Severity: ${prediction.severity || 'N/A'}`;
+                }
+              }
+            }
           };
         })
     ]
