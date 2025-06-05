@@ -4,10 +4,12 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { generateContent } from '../lib/gemini';
+import { useLanguageStore } from '../store/languageStore';
 
 const Diagnosis = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { translate } = useLanguageStore();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);

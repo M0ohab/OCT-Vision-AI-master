@@ -1,7 +1,9 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { supabase } from "../supabaseClient"; // Ensure you have a Supabase client setup
+import { useLanguageStore } from '../store/languageStore';
 
 function Diagnoses() {
+  const { translate } = useLanguageStore();
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
 
@@ -18,14 +20,14 @@ function Diagnoses() {
         .upload(`patient-images/${file.name}`, file);
 
       if (error) {
-        console.error("Error uploading image:", error.message);
+        console.error(translate("errorUploadingImage"), error.message);
         return;
       }
 
-      console.log("Image uploaded successfully:", data);
-      alert("Image uploaded successfully!");
+      console.log(translate("imageUploadedSuccessfully"), data);
+      alert(translate("imageUploadSuccessAlert"));
     } catch (error) {
-      console.error("Unexpected error:", error);
+      console.error(translate("unexpectedError"), error);
     } finally {
       setUploading(false);
     }
@@ -33,14 +35,14 @@ function Diagnoses() {
 
   return (
     <div>
-      <h2>Upload Patient Image</h2>
+      <h2>{translate("uploadPatientImageTitle")}</h2>
       <input
         type="file"
         accept="image/*"
         onChange={handleImageUpload}
         disabled={uploading}
       />
-      {uploading && <p>Uploading...</p>}
+      {uploading && <p>{translate("uploadingMessage")}</p>}
     </div>
   );
 }

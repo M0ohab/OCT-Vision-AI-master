@@ -1,120 +1,156 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
-import { Eye, LogOut, Menu, X } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { Menu, X, Globe } from 'lucide-react';
+import { useLanguageStore } from '../store/languageStore';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Navbar() {
-  const { user, setUser } = useAuthStore();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { language, setLanguage, translate } = useLanguageStore();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'ar' : 'en');
   };
 
   return (
     <nav className="bg-white shadow-lg">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Logo and Title */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <Eye className="h-8 w-8 text-blue-600" />
-              <span className="text-3xl font-semibold text-gray-900 tracking-wide">
-                <span className="text-blue-600">OCT</span> Vision{' '}
-                <span className="text-blue-600">AI</span>
-              </span>
+          <div className="flex">
+            <Link to="/" className="flex-shrink-0 flex items-center">
+              <img
+                className="h-8 w-auto"
+                src="/logo.svg"
+                alt={translate('appName')}
+              />
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex items-center md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-blue-600 focus:outline-none"
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
             {user ? (
               <>
-                <Link to="/dashboard" className="text-gray-700 hover:text-blue-600">
-                  Dashboard
+                <Link
+                  to="/dashboard"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  {translate('dashboard')}
                 </Link>
-                <Link to="/diagnosis" className="text-gray-700 hover:text-blue-600">
-                  Diagnosis
+                <Link
+                  to="/diagnosis"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  {translate('diagnosis')}
                 </Link>
-                <Link to="/education" className="text-gray-700 hover:text-blue-600">
-                  Education
+                <Link
+                  to="/education"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  {translate('education')}
                 </Link>
                 <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600"
+                  onClick={signOut}
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
+                  {translate('logout')}
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="text-gray-700 hover:text-blue-600 pl-4">
-                  Login
+                <Link
+                  to="/login"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  {translate('login')}
                 </Link>
                 <Link
                   to="/signup"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
-                  Sign Up
+                  {translate('signup')}
                 </Link>
               </>
             )}
+            <button
+              onClick={toggleLanguage}
+              className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+            >
+              <Globe className="h-5 w-5 mr-1" />
+              {language.toUpperCase()}
+            </button>
+          </div>
+
+          <div className="-mr-2 flex items-center sm:hidden">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+            >
+              {isOpen ? (
+                <X className="block h-6 w-6" />
+              ) : (
+                <Menu className="block h-6 w-6" />
+              )}
+            </button>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="flex flex-col space-y-2 mt-2">
-              {user ? (
-                <>
-                  <Link to="/dashboard" className="text-gray-700 hover:text-blue-600">
-                    Dashboard
-                  </Link>
-                  <Link to="/diagnosis" className="text-gray-700 hover:text-blue-600">
-                    Diagnosis
-                  </Link>
-                  <Link to="/education" className="text-gray-700 hover:text-blue-600">
-                    Education
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center space-x-1 text-gray-700 hover:text-blue-600"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="text-gray-700 hover:text-blue-600 pl-4">
-                    Login
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        )}
       </div>
+
+      {isOpen && (
+        <div className="sm:hidden">
+          <div className="pt-2 pb-3 space-y-1">
+            {user ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  {translate('dashboard')}
+                </Link>
+                <Link
+                  to="/diagnosis"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  {translate('diagnosis')}
+                </Link>
+                <Link
+                  to="/education"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  {translate('education')}
+                </Link>
+                <button
+                  onClick={signOut}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  {translate('logout')}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  {translate('login')}
+                </Link>
+                <Link
+                  to="/signup"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  {translate('signup')}
+                </Link>
+              </>
+            )}
+            <button
+              onClick={toggleLanguage}
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 flex items-center"
+            >
+              <Globe className="h-5 w-5 mr-1" />
+              {language.toUpperCase()}
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

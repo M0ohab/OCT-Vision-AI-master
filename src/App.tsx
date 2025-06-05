@@ -1,43 +1,24 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { useLanguageStore } from './store/languageStore';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import SignUp from './pages/SignUp';
-import Dashboard from './pages/Dashboard';
-import Diagnosis from './pages/Diagnosis';
-import Education from './pages/Education';
-import ProtectedRoute from './components/ProtectedRoute';
+import Routes from './Routes';
 
 function App() {
+  const { language } = useLanguageStore();
+
+  useEffect(() => {
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
+  }, [language]);
+
   return (
-    <Router>
+    <BrowserRouter>
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/diagnosis"
-            element={
-              <ProtectedRoute>
-                <Diagnosis />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/education" element={<Education />} />
-        </Routes>
+        <Routes />
       </div>
-    </Router>
+    </BrowserRouter>
   );
 }
 

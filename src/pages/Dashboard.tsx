@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import { Calendar, Download, Eye, TrendingUp, Clock, AlertCircle, Save, Trash, X } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
+import { format, parseISO } from 'date-fns';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,6 +14,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import { useLanguageStore } from '../store/languageStore';
 
 ChartJS.register(
   CategoryScale,
@@ -24,45 +26,16 @@ ChartJS.register(
   Legend
 );
 
-const conditionOptions = [
-  "Diabetes",
-  "Hypertension",
-  "High Cholesterol",
-  "Asthma"
-];
-const chronicDiseaseOptions = [
-  "Heart Disease",
-  "Kidney Disease",
-  "Liver Disease",
-  "Cancer"
-];
-const eyeConditionOptions = [
-  "Glaucoma",
-  "Cataract",
-  "Macular Degeneration",
-  "Diabetic Retinopathy"
-];
-const ocularSurgeryOptions = [
-  "Cataract Surgery",
-  "LASIK",
-  "Retinal Detachment Repair",
-  "Glaucoma Surgery"
-];
-
-const familyHistoryOptions = [
-  "Glaucoma",
-  "Macular Degeneration",
-  "Diabetic Retinopathy",
-  "Retinitis Pigmentosa"
-];
-
 const Dashboard = () => {
   const { user } = useAuthStore();
+  const { translate } = useLanguageStore();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [scanSuccess, setScanSuccess] = useState<string | null>(null);
+  const [daysUntilFollowUp, setDaysUntilFollowUp] = useState<number | null>(null);
+  const [showNotification, setShowNotification] = useState<boolean>(false);
   const [octImages, setOctImages] = useState([]);
   const [predictions, setPredictions] = useState([]);
   const [medicalHistory, setMedicalHistory] = useState({
@@ -80,6 +53,53 @@ const Dashboard = () => {
   const [customOcularSurgery, setCustomOcularSurgery] = useState('');
   const [customFamilyHistory, setCustomFamilyHistory] = useState('');
   const [reportModal, setReportModal] = useState({ open: false, content: '' });
+
+  const conditionOptions = [
+    translate('diabetes'),
+    translate('hypertension'),
+    translate('highCholesterol'),
+    translate('asthma')
+  ];
+
+  const chronicDiseaseOptions = [
+    translate('heartDisease'),
+    translate('kidneyDisease'),
+    translate('liverDisease'),
+    translate('cancer')
+  ];
+
+  const eyeConditionOptions = [
+    translate('glaucoma'),
+    translate('cataract'),
+    translate('macularDegeneration'),
+    translate('diabeticRetinopathy')
+  ];
+
+  const ocularSurgeryOptions = [
+    translate('cataractSurgery'),
+    translate('lasik'),
+    translate('retinalDetachment'),
+    translate('glaucomaSurgery')
+  ];
+
+  const familyHistoryOptions = [
+    translate('glaucoma'),
+    translate('macularDegeneration'),
+    translate('diabeticRetinopathy'),
+    translate('retinitisPigmentosa')
+  ];
+
+  // Calculate days until follow-up and show notification
+  useEffect(() => {
+    if (healthReports && healthReports.length > 0 && healthReports[0]?.follow_up_date) {
+      const followUpDate = new Date(healthReports[0].follow_up_date);
+      const today = new Date();
+      const diffTime = followUpDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      setDaysUntilFollowUp(diffDays);
+      setShowNotification(diffDays <= 7 && diffDays >= 0);
+    }
+  }, [healthReports]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -566,6 +586,19 @@ const Dashboard = () => {
     }
   }, [scanSuccess]);
 
+  // Calculate days until follow-up and show notification
+  useEffect(() => {
+    if (healthReports[0]?.follow_up_date) {
+      const followUpDate = new Date(healthReports[0].follow_up_date);
+      const today = new Date();
+      const timeDiff = followUpDate.getTime() - today.getTime();
+      const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+      setDaysUntilFollowUp(daysDiff);
+      setShowNotification(daysDiff <= 7 && daysDiff > 0);
+    }
+  }, [healthReports]);
+
   // View report handler
   const viewReport = async (predictionId: string) => {
     const { data, error } = await supabase
@@ -629,21 +662,29 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Patient Dashboard</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">
+        {translate('patient_dashboard')}
+      </h1>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Disease Status</h2>
+            <h2 className="text-xl font-semibold text-gray-800">
+              {translate('disease_status')}
+            </h2>
             <TrendingUp className="h-6 w-6 text-blue-600" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">{getProgressionStatus()}</p>
+          <p className="text-2xl font-bold text-gray-900">
+            {translate('not_enough_data')}
+          </p>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Latest Scan</h2>
+            <h2 className="text-xl font-semibold text-gray-800">
+              {translate('latest_scan')}
+            </h2>
             <Eye className="h-6 w-6 text-blue-600" />
           </div>
           <p className="text-gray-600">
@@ -655,14 +696,33 @@ const Dashboard = () => {
 
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Next Follow-up</h2>
+            <h2 className="text-xl font-semibold text-gray-800">
+              {translate('next_follow_up')}
+            </h2>
             <Calendar className="h-6 w-6 text-blue-600" />
           </div>
-          <p className="text-gray-600">
-            {healthReports[0]?.follow_up_date
-              ? new Date(healthReports[0].follow_up_date).toLocaleDateString()
-              : 'Not scheduled'}
-          </p>
+          <div>
+            <p className="text-gray-600">
+              {healthReports[0]?.follow_up_date
+                ? new Date(healthReports[0].follow_up_date).toLocaleDateString()
+                : 'Not scheduled'}
+            </p>
+            {daysUntilFollowUp !== null && healthReports[0]?.follow_up_date && (
+              <p className="text-sm text-gray-500 mt-1">
+                {daysUntilFollowUp === 0
+                  ? 'Today is your follow-up!'
+                  : daysUntilFollowUp > 0
+                    ? `In ${daysUntilFollowUp} day(s)`
+                    : `Was ${Math.abs(daysUntilFollowUp)} day(s) ago`}
+              </p>
+            )}
+            {showNotification && (
+              <div className="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-md flex items-center">
+                <AlertCircle className="h-5 w-5 mr-2" />
+                <span>Reminder: Your follow-up is within 7 days!</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -678,15 +738,15 @@ const Dashboard = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
                 <Save className="h-4 w-4" />
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? translate('saving') : translate('save')}
               </button>
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-                title="Edit Medical History"
+                title={translate('edit_medical_history')}
               >
-                Edit
+                {translate('edit')}
               </button>
             )}
           </div>
@@ -701,7 +761,7 @@ const Dashboard = () => {
 
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <h3 className="font-medium text-gray-700 mb-2">Existing Conditions</h3>
+            <h3 className="font-medium text-gray-700 mb-2">{translate('existing_conditions')}</h3>
             {isEditing ? (
               <>
                 {/* Existing Conditions */}
@@ -725,16 +785,16 @@ const Dashboard = () => {
                   }}
                   className="w-full p-2 border rounded-md"
                 >
-                  <option value="">Select condition</option>
+                  <option value="">{translate('select_condition')}</option>
                   {conditionOptions.map(option => (
                     <option key={option} value={option}>{option}</option>
                   ))}
-                  <option value="Other">Other</option>
+                  <option value="Other">{translate('other')}</option>
                 </select>
                 {medicalHistory.existing_conditions === "Other" && isEditing && (
                   <input
                     type="text"
-                    placeholder="Please specify"
+                    placeholder={translate('please_specify')}
                     value={customCondition}
                     onChange={e => setCustomCondition(e.target.value)}
                     className="w-full p-2 border rounded-md mt-2"
@@ -742,11 +802,11 @@ const Dashboard = () => {
                 )}
               </>
             ) : (
-              <p className="text-gray-600">{medicalHistory.existing_conditions || 'None reported'}</p>
+              <p className="text-gray-600">{medicalHistory.existing_conditions || translate('none_reported')}</p>
             )}
           </div>
           <div>
-            <h3 className="font-medium text-gray-700 mb-2">Chronic Diseases</h3>
+            <h3 className="font-medium text-gray-700 mb-2">{translate('chronic_diseases')}</h3>
             {isEditing ? (
               <>
                 {/* Chronic Diseases */}
@@ -770,16 +830,16 @@ const Dashboard = () => {
                   }}
                   className="w-full p-2 border rounded-md"
                 >
-                  <option value="">Select condition</option>
+                  <option value="">{translate('select_condition')}</option>
                   {chronicDiseaseOptions.map(option => (
                     <option key={option} value={option}>{option}</option>
                   ))}
-                  <option value="Other">Other</option>
+                  <option value="Other">{translate('other')}</option>
                 </select>
                 {medicalHistory.chronic_diseases === "Other" && isEditing && (
                   <input
                     type="text"
-                    placeholder="Please specify"
+                    placeholder={translate('please_specify')}
                     value={customChronic}
                     onChange={e => setCustomChronic(e.target.value)}
                     className="w-full p-2 border rounded-md mt-2"
@@ -787,11 +847,11 @@ const Dashboard = () => {
                 )}
               </>
             ) : (
-              <p className="text-gray-600">{medicalHistory.chronic_diseases || 'None reported'}</p>
+              <p className="text-gray-600">{medicalHistory.chronic_diseases || translate('none_reported')}</p>
             )}
           </div>
           <div>
-            <h3 className="font-medium text-gray-700 mb-2">Previous Eye Conditions</h3>
+            <h3 className="font-medium text-gray-700 mb-2">{translate('previous_eye_conditions')}</h3>
             {isEditing ? (
               <>
                 {/* Previous Eye Conditions */}
@@ -815,16 +875,16 @@ const Dashboard = () => {
                   }}
                   className="w-full p-2 border rounded-md"
                 >
-                  <option value="">Select condition</option>
+                  <option value="">{translate('select_condition')}</option>
                   {eyeConditionOptions.map(option => (
                     <option key={option} value={option}>{option}</option>
                   ))}
-                  <option value="Other">Other</option>
+                  <option value="Other">{translate('other')}</option>
                 </select>
                 {medicalHistory.previous_eye_conditions === "Other" && isEditing && (
                   <input
                     type="text"
-                    placeholder="Please specify"
+                    placeholder={translate('please_specify')}
                     value={customEye}
                     onChange={e => setCustomEye(e.target.value)}
                     className="w-full p-2 border rounded-md mt-2"
@@ -832,11 +892,11 @@ const Dashboard = () => {
                 )}
               </>
             ) : (
-              <p className="text-gray-600">{medicalHistory.previous_eye_conditions || 'None reported'}</p>
+              <p className="text-gray-600">{medicalHistory.previous_eye_conditions || translate('none_reported')}</p>
             )}
           </div>
           <div>
-            <h3 className="font-medium text-gray-700 mb-2">Previous Ocular Surgeries</h3>
+            <h3 className="font-medium text-gray-700 mb-2">{translate('previous_ocular_surgeries')}</h3>
             {isEditing ? (
               <>
                 <select
@@ -859,16 +919,16 @@ const Dashboard = () => {
                   }}
                   className="w-full p-2 border rounded-md"
                 >
-                  <option value="">Select surgery</option>
+                  <option value="">{translate('select_surgery')}</option>
                   {ocularSurgeryOptions.map(option => (
                     <option key={option} value={option}>{option}</option>
                   ))}
-                  <option value="Other">Other</option>
+                  <option value="Other">{translate('other')}</option>
                 </select>
                 {medicalHistory.previous_ocular_surgeries === "Other" && isEditing && (
                   <input
                     type="text"
-                    placeholder="Please specify"
+                    placeholder={translate('please_specify')}
                     value={customOcularSurgery}
                     onChange={e => setCustomOcularSurgery(e.target.value)}
                     className="w-full p-2 border rounded-md mt-2"
@@ -876,11 +936,11 @@ const Dashboard = () => {
                 )}
               </>
             ) : (
-              <p className="text-gray-600">{medicalHistory.previous_ocular_surgeries || 'None reported'}</p>
+              <p className="text-gray-600">{medicalHistory.previous_ocular_surgeries || translate('none_reported')}</p>
             )}
           </div>
           <div>
-            <h3 className="font-medium text-gray-700 mb-2">Family History with Eye Diseases</h3>
+            <h3 className="font-medium text-gray-700 mb-2">{translate('family_history_eye_diseases')}</h3>
             {isEditing ? (
               <>
                 <select
@@ -903,16 +963,16 @@ const Dashboard = () => {
                   }}
                   className="w-full p-2 border rounded-md"
                 >
-                  <option value="">Select disease</option>
+                  <option value="">{translate('select_disease')}</option>
                   {familyHistoryOptions.map(option => (
                     <option key={option} value={option}>{option}</option>
                   ))}
-                  <option value="Other">Other</option>
+                  <option value="Other">{translate('other')}</option>
                 </select>
                 {medicalHistory.family_history_eye_diseases === "Other" && isEditing && (
                   <input
                     type="text"
-                    placeholder="Please specify"
+                    placeholder={translate('please_specify')}
                     value={customFamilyHistory}
                     onChange={e => setCustomFamilyHistory(e.target.value)}
                     className="w-full p-2 border rounded-md mt-2"
@@ -920,11 +980,11 @@ const Dashboard = () => {
                 )}
               </>
             ) : (
-              <p className="text-gray-600">{medicalHistory.family_history_eye_diseases || 'None reported'}</p>
+              <p className="text-gray-600">{medicalHistory.family_history_eye_diseases || translate('none_reported')}</p>
             )}
           </div>
           <div>
-            <h3 className="font-medium text-gray-700 mb-2">Last Checkup</h3>
+            <h3 className="font-medium text-gray-700 mb-2">{translate('last_checkup')}</h3>
             {isEditing ? (
               <input
                 type="date"
@@ -936,7 +996,7 @@ const Dashboard = () => {
               <p className="text-gray-600">
                 {medicalHistory.last_checkup_date
                   ? new Date(medicalHistory.last_checkup_date).toLocaleDateString()
-                  : 'No record'}
+                  : translate('no_record')}
               </p>
             )}
           </div>
@@ -945,7 +1005,7 @@ const Dashboard = () => {
 
       {/* OCT Scans Comparison */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">OCT Scan History</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-6">{translate('oct_scan_history')}</h2>
 
         {/* Scan Success Message */}
         {scanSuccess && (
@@ -959,7 +1019,7 @@ const Dashboard = () => {
             <div key={scan.id} className="border rounded-lg p-4">
               <img
                 src={scan.image_path}
-                alt={`OCT Scan from ${new Date(scan.upload_date).toLocaleDateString()}`}
+                alt={`${translate('oct_scan_from')} ${new Date(scan.upload_date).toLocaleDateString()}`}
                 className="w-full h-48 object-cover rounded mb-4"
               />
               <div className="flex items-center justify-between">
@@ -976,7 +1036,7 @@ const Dashboard = () => {
                   <button
                     onClick={() => handleDeleteScan(scan.id)}
                     className="text-blue-600 hover:text-blue-800"
-                    title="Delete Scan"
+                    title={translate('delete_scan')}
                   >
                     <Trash className="h-5 w-5" />
                   </button>
@@ -989,11 +1049,11 @@ const Dashboard = () => {
 
       {/* Analysis for Disease Status */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">Patient Health Analysis from OCT Scans</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">{translate('patient_health_analysis')}</h2>
 
         {/* Enhanced Analysis Section */}
         <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
-          <h3 className="text-lg font-medium text-blue-800 mb-2">Personalized Analysis</h3>
+          <h3 className="text-lg font-medium text-blue-800 mb-2">{translate('personalized_analysis')}</h3>
           <p className="text-gray-700 leading-relaxed">
             {getEnhancedAnalysis()}
           </p>
@@ -1002,14 +1062,14 @@ const Dashboard = () => {
             <div className="mt-3 flex items-center">
               <div className={`w-3 h-3 rounded-full mr-2 ${getProgressionStatus() === 'Worsening' ? 'bg-red-500' : getProgressionStatus() === 'Improving' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
               <span className={`text-sm font-medium ${getProgressionStatus() === 'Worsening' ? 'text-red-700' : getProgressionStatus() === 'Improving' ? 'text-green-700' : 'text-yellow-700'}`}>
-                Status: {getProgressionStatus()}
+                {translate('status')}: {getProgressionStatus()}
               </span>
             </div>
           )}
         </div>
 
         <p className="mb-4 text-gray-600">
-          This section analyzes your overall eye health based on your uploaded OCT scans. The chart below shows how your health status has changed over time.
+          {translate('analysis_description')}
         </p>
 
         <div className="h-64">
@@ -1022,11 +1082,11 @@ const Dashboard = () => {
                 max: 1,
                 ticks: {
                   callback: function (value) {
-                    if (value === 0) return 'Poor';
-                    if (value === 0.25) return 'Fair';
-                    if (value === 0.5) return 'Moderate';
-                    if (value === 0.75) return 'Good';
-                    if (value === 1) return 'Excellent';
+                    if (value === 0) return translate('poor');
+                    if (value === 0.25) return translate('fair');
+                    if (value === 0.5) return translate('moderate');
+                    if (value === 0.75) return translate('good');
+                    if (value === 1) return translate('excellent');
                     return '';
                   }
                 }
@@ -1037,12 +1097,12 @@ const Dashboard = () => {
                 callbacks: {
                   label: function (context) {
                     const value = context.raw;
-                    let status = 'Poor';
-                    if (value > 0.8) status = 'Excellent';
-                    else if (value > 0.6) status = 'Good';
-                    else if (value > 0.4) status = 'Moderate';
-                    else if (value > 0.2) status = 'Fair';
-                    return `Health Status: ${status} (${Math.round(value * 100)}%)`;
+                    let status = translate('poor');
+                    if (value > 0.8) status = translate('excellent');
+                    else if (value > 0.6) status = translate('good');
+                    else if (value > 0.4) status = translate('moderate');
+                    else if (value > 0.2) status = translate('fair');
+                    return `${translate('health_status')}: ${status} (${Math.round(value * 100)}%)`;
                   }
                 }
               }
@@ -1051,10 +1111,50 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Next Follow-up */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-800">{translate('next_follow_up')}</h2>
+          <Calendar className="h-6 w-6 text-blue-600" />
+        </div>
+
+        {showNotification && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded mb-4 flex items-center">
+            <AlertCircle className="h-5 w-5 mr-2" />
+            <span>{translate('follow_up_appointment_reminder', { days: daysUntilFollowUp })}</span>
+          </div>
+        )}
+
+        <div className="flex items-center space-x-4 mb-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">{translate('next_follow_up_date')}</label>
+            {healthReports.length > 0 && healthReports[0]?.follow_up_date ? (
+              <p className="text-lg font-semibold text-gray-900">
+                {format(parseISO(healthReports[0].follow_up_date), 'MM/dd/yyyy')}
+              </p>
+            ) : (
+              <p className="text-lg text-gray-500">{translate('no_follow_up_date_available')}</p>
+            )}
+          </div>
+          {daysUntilFollowUp !== null && (
+            <div className="bg-blue-50 p-4 rounded-lg flex-1">
+              <h3 className="text-sm font-medium text-blue-800 mb-1">{translate('days_until_follow_up')}</h3>
+              <p className="text-2xl font-bold text-blue-600">
+                {daysUntilFollowUp === 0
+                  ? translate('today_is_your_follow_up')
+                  : daysUntilFollowUp > 0
+                    ? translate('in_x_days', { days: daysUntilFollowUp })
+                    : translate('was_x_days_ago', { days: Math.abs(daysUntilFollowUp) })}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Previous Diagnoses */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-800">Previous Diagnoses</h2>
+          <h2 className="text-xl font-semibold text-gray-800">{translate('previous_diagnoses')}</h2>
           <Clock className="h-6 w-6 text-blue-600" />
         </div>
 
@@ -1062,11 +1162,11 @@ const Dashboard = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disease Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{translate('date')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{translate('disease_type')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{translate('severity')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{translate('confidence')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{translate('actions')}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -1080,14 +1180,14 @@ const Dashboard = () => {
                     <button
                       onClick={() => viewReport(prediction.id)}
                       className="text-blue-600 hover:text-blue-800 mr-3"
-                      title="View Report"
+                      title={translate('view_report')}
                     >
                       <Eye className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => downloadReport(prediction.id)}
                       className="text-blue-600 hover:text-blue-800"
-                      title="Download Report"
+                      title={translate('download_report')}
                     >
                       <Download className="h-5 w-5" />
                     </button>
@@ -1106,22 +1206,19 @@ const Dashboard = () => {
             <button onClick={() => setReportModal({ open: false, content: '' })} className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
               <X className="h-5 w-5" />
             </button>
-            <h3 className="text-lg font-semibold mb-4">Report</h3>
+            <h3 className="text-lg font-semibold mb-4">{translate('report')}</h3>
             <pre className="whitespace-pre-wrap text-sm text-gray-800">{reportModal.content}</pre>
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setReportModal({ open: false, content: '' })}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                {translate('close')}
+              </button>
+            </div>
           </div>
         </div>
       )}
-
-      {/* Download History Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => {/* TODO: Implement PDF download */ }}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-        >
-          <Download className="h-5 w-5" />
-          <span>Download Medical History</span>
-        </button>
-      </div>
     </div>
   );
 };
