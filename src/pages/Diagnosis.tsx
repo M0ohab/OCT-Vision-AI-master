@@ -28,6 +28,7 @@ const Diagnosis = () => {
   const [isGeneratingPatientReport, setIsGeneratingPatientReport] = useState(false);
   const [showPatientReport, setShowPatientReport] = useState(false);
   const [showDoctorReportPanel, setShowDoctorReportPanel] = useState(false);
+  const [isLoadingPatientData, setIsLoadingPatientData] = useState(true);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -241,7 +242,7 @@ const Diagnosis = () => {
             <button
               onClick={generatePatientSummary}
               className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-base"
-              disabled={isGeneratingPatientReport}
+              disabled={isGeneratingPatientReport || isLoadingPatientData}
             >
               {isGeneratingPatientReport ? (
                 <>
@@ -265,7 +266,7 @@ const Diagnosis = () => {
             <button
               onClick={handleGenerateDoctorReport}
               className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-base"
-              disabled={isGeneratingDoctorReport}
+              disabled={isGeneratingDoctorReport || isLoadingPatientData}
             >
               {isGeneratingDoctorReport ? (
                 <>
@@ -286,7 +287,7 @@ const Diagnosis = () => {
   };
 
   const generatePatientSummary = async () => {
-    if (!prediction || !patientInfo || !medicalHistory) {
+    if (!prediction || !patientInfo || !medicalHistory || isLoadingPatientData) {
       setPatientSummary('Insufficient data to generate summary.');
       return;
     }
@@ -341,7 +342,7 @@ const Diagnosis = () => {
   };
 
   const handleGenerateDoctorReport = async () => {
-    if (!prediction || !patientInfo || !medicalHistory) return;
+    if (!prediction || !patientInfo || !medicalHistory || isLoadingPatientData) return;
     setIsGeneratingDoctorReport(true);
     try {
       const maxProb = Math.max(...Object.values(prediction.probabilities).map(Number));
@@ -392,36 +393,34 @@ const Diagnosis = () => {
   useEffect(() => {
     const fetchPatientData = async () => {
       // Fix: Add null check for user before using user.id
-      if (!user || !user.id) throw new Error('User not found.');
-
-      // Fetch patient info
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .single();
-      if (profileError) {
-        setError('Failed to fetch profile: ' + profileError.message);
-        setPatientInfo(null);
-      } else {
-        setPatientInfo(profile);
+      if (!user || !user.id) {
+        setIsLoadingPatientData(false);
+        return;
       }
 
-      // Fetch medical history
-      const { data: history, error: historyError } = await supabase
-        .from('medical_histories')
-        .select('existing_conditions, chronic_diseases, previous_eye_conditions')
-        .eq('user_id', user.id)
-        .single();
-      if (historyError) {
-        setError('Failed to fetch medical history: ' + historyError.message);
-        setMedicalHistory(null);
-      } else {
+      setIsLoadingPatientData(true);
+      try {
+        // Fetch patient info
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        if (profileError) {
+          setPatientInfo(null);
+        } else {
+          setPatientInfo(profile);
+        }
         setMedicalHistory(history);
+      } catch (err) {
+        setPatientInfo(null);
+        setError('Failed to fetch patient data');
+      } finally {
+        setIsLoadingPatientData(false);
       }
     };
 
-    if (prediction) fetchPatientData();
+    if (user && prediction) fetchPatientData();
   }, [prediction, user]);
 
   return (
