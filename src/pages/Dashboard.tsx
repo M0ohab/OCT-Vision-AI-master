@@ -458,6 +458,82 @@ const Dashboard = () => {
     return recommendation;
   };
 
+<<<<<<< HEAD
+=======
+  // Remove the duplicate getSeverityDescription function
+  // const getSeverityDescription = (severity: string, confidence: number) => {
+  //   const confidencePercent = (confidence * 100).toFixed(1);
+
+  //   switch (severity.toLowerCase()) {
+  //     case 'mild':
+  //       return `mild severity (${confidencePercent}% confidence)`;
+  //     case 'moderate':
+  //       return `moderate severity (${confidencePercent}% confidence)`;
+  //     case 'severe':
+  //       return `severe condition (${confidencePercent}% confidence)`;
+  //     default:
+  //       return `${severity} severity (${confidencePercent}% confidence)`;
+  //   }
+  // };
+
+  // Remove the duplicate getTrendAnalysis function
+  // const getTrendAnalysis = () => {
+  //   if (predictions.length < 3) {
+  //     // Simple comparison between two points
+  //     const status = getProgressionStatus();
+  //     const latestPrediction = predictions[0];
+  //     const previousPrediction = predictions[1];
+  //     const changePercent = Math.abs(((latestPrediction.confidence_score - previousPrediction.confidence_score) / previousPrediction.confidence_score) * 100).toFixed(1);
+
+  //     if (status === 'Worsening') {
+  //       return `Your condition appears to be worsening by approximately ${changePercent}% since your previous scan on ${new Date(previousPrediction.prediction_date).toLocaleDateString()}.`;
+  //     } else if (status === 'Improving') {
+  //       return `Your condition shows improvement of approximately ${changePercent}% since your previous scan on ${new Date(previousPrediction.prediction_date).toLocaleDateString()}.`;
+  //     } else {
+  //       return `Your condition has remained relatively stable since your previous scan on ${new Date(previousPrediction.prediction_date).toLocaleDateString()}.`;
+  //     }
+  //   } else {
+  //     // More complex trend analysis with 3+ data points
+  //     const firstDate = new Date(predictions[predictions.length - 1].prediction_date);
+  //     const latestDate = new Date(predictions[0].prediction_date);
+  //     const monthsDiff = (latestDate.getFullYear() - firstDate.getFullYear()) * 12 + (latestDate.getMonth() - firstDate.getMonth());
+
+  //     // Calculate if overall trend is improving, worsening or fluctuating
+  //     let improving = 0;
+  //     let worsening = 0;
+
+  //     for (let i = 0; i < predictions.length - 1; i++) {
+  //       if (predictions[i].confidence_score < predictions[i + 1].confidence_score) {
+  //         improving++;
+  //       } else if (predictions[i].confidence_score > predictions[i + 1].confidence_score) {
+  //         worsening++;
+  //       }
+  //     }
+
+  //     if (improving > worsening && improving > (predictions.length - 1) / 2) {
+  //       return `Over the past ${monthsDiff > 0 ? monthsDiff + ' months' : 'period'}, your condition has shown an overall improving trend.`;
+  //     } else if (worsening > improving && worsening > (predictions.length - 1) / 2) {
+  //       return `Over the past ${monthsDiff > 0 ? monthsDiff + ' months' : 'period'}, your condition has shown an overall worsening trend.`;
+  //     } else {
+  //       return `Over the past ${monthsDiff > 0 ? monthsDiff + ' months' : 'period'}, your condition has fluctuated with no clear overall trend.`;
+  //     }
+  //   }
+  // };
+
+  // Remove the duplicate getRecommendation function
+  // const getRecommendation = (status: string, severity: string) => {
+  //   if (status === 'Worsening') {
+  //     return severity.toLowerCase() === 'severe' ?
+  //       'We strongly recommend scheduling an appointment with your ophthalmologist as soon as possible to discuss treatment options.' :
+  //       'We recommend scheduling a follow-up appointment with your ophthalmologist to monitor your condition more closely.';
+  //   } else if (status === 'Improving') {
+  //     return 'Continue with your current treatment plan and follow up with your ophthalmologist as scheduled.';
+  //   } else {
+  //     return 'Maintain your regular check-up schedule with your ophthalmologist to monitor your condition.';
+  //   }
+  // };
+
+>>>>>>> 2b521d860fee8a9e5936e315391dd550f74545d8
   const chartData = {
     labels: predictions.map(p => new Date(p.prediction_date).toLocaleDateString()),
     datasets: [
@@ -602,12 +678,18 @@ const Dashboard = () => {
             </h2>
             <TrendingUp className="h-6 w-6 text-blue-600" />
           </div>
+<<<<<<< HEAD
           <div className="flex items-center mt-2">
             <div className={`w-3 h-3 rounded-full mr-2 ${getProgressionStatus() === 'Worsening' ? 'bg-red-500' : getProgressionStatus() === 'Improving' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
             <span className={`text-sm font-medium ${getProgressionStatus() === 'Worsening' ? 'text-red-700' : getProgressionStatus() === 'Improving' ? 'text-green-700' : 'text-yellow-700'}`}>
               {translate('status')}: {getProgressionStatus()}
             </span>
           </div>
+=======
+          <p className="text-2xl font-bold text-gray-900">
+            {translate('not_enough_data')}
+          </p>
+>>>>>>> 2b521d860fee8a9e5936e315391dd550f74545d8
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -635,7 +717,11 @@ const Dashboard = () => {
             <p className="text-gray-600">
               {healthReports[0]?.follow_up_date
                 ? new Date(healthReports[0].follow_up_date).toLocaleDateString()
+<<<<<<< HEAD
                 : translate('not_scheduled')}
+=======
+                : 'Not scheduled'}
+>>>>>>> 2b521d860fee8a9e5936e315391dd550f74545d8
             </p>
             {daysUntilFollowUp !== null && healthReports[0]?.follow_up_date && (
               <p className="text-sm text-gray-500 mt-1">
@@ -649,7 +735,11 @@ const Dashboard = () => {
             {showNotification && (
               <div className="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-md flex items-center">
                 <AlertCircle className="h-5 w-5 mr-2" />
+<<<<<<< HEAD
                 <span>{translate('follow_up_reminder')}</span>
+=======
+                <span>Reminder: Your follow-up is within 7 days!</span>
+>>>>>>> 2b521d860fee8a9e5936e315391dd550f74545d8
               </div>
             )}
           </div>
@@ -989,7 +1079,16 @@ const Dashboard = () => {
           </p>
 
           {predictions.length > 0 && (
+<<<<<<< HEAD
             <></>
+=======
+            <div className="mt-3 flex items-center">
+              <div className={`w-3 h-3 rounded-full mr-2 ${getProgressionStatus() === 'Worsening' ? 'bg-red-500' : getProgressionStatus() === 'Improving' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+              <span className={`text-sm font-medium ${getProgressionStatus() === 'Worsening' ? 'text-red-700' : getProgressionStatus() === 'Improving' ? 'text-green-700' : 'text-yellow-700'}`}>
+                {translate('status')}: {getProgressionStatus()}
+              </span>
+            </div>
+>>>>>>> 2b521d860fee8a9e5936e315391dd550f74545d8
           )}
         </div>
 
@@ -1066,10 +1165,17 @@ const Dashboard = () => {
               <h3 className="text-sm font-medium text-blue-800 mb-1">{translate('days_until_follow_up')}</h3>
               <p className="text-2xl font-bold text-blue-600">
                 {daysUntilFollowUp === 0
+<<<<<<< HEAD
                   ? 'Today is your follow-up!'
                   : daysUntilFollowUp > 0
                     ? `In ${daysUntilFollowUp} day(s)`
                     : `Was ${Math.abs(daysUntilFollowUp)} day(s) ago`}
+=======
+                  ? translate('today_is_your_follow_up')
+                  : daysUntilFollowUp > 0
+                    ? translate('in_x_days', { days: daysUntilFollowUp })
+                    : translate('was_x_days_ago', { days: Math.abs(daysUntilFollowUp) })}
+>>>>>>> 2b521d860fee8a9e5936e315391dd550f74545d8
               </p>
             </div>
           )}
